@@ -53,7 +53,15 @@ public sealed class Account permits CheckingAccount, SavingsAccount {
     /**
      * Preleva {@code amount} dal saldo del conto.
      */
-    public void withdraw(BigDecimal amount) {
+    /**
+     * BUG: il metodo withdraw() non è thread‑safe. Le operazioni di lettura,
+     * calcolo e scrittura del saldo non sono atomiche, quindi più thread
+     * possono leggere lo stesso balance e sovrascrivere il risultato
+     * dell’altro, causando prelievi “persi” e saldi finali errati.
+     * Soluzione: rendere withdraw() synchronized (o usare un lock esplicito).
+     */
+
+    public synchronized void withdraw(BigDecimal amount) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Importo prelievo deve essere positivo");
         }
@@ -66,6 +74,7 @@ public sealed class Account permits CheckingAccount, SavingsAccount {
         transactions.add(new Transaction(
                 TransactionType.WITHDRAWAL, amount, "Prelievo", LocalDateTime.now()));
     }
+
 
     /** Saldo minimo ammesso. Le sottoclassi possono fare override. */
     protected BigDecimal getMinBalance() {

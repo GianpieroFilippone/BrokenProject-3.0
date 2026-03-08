@@ -7,7 +7,19 @@ import java.math.BigDecimal;
  */
 public class BankConfiguration {
 
-    private static BankConfiguration instance;
+
+    /**
+     * BUG: il Singleton non è thread-safe. Il campo 'instance' non è dichiarato volatile,
+     * quindi il double-checked locking non garantisce la visibilità corretta tra thread.
+     * A causa del reordering del Java Memory Model, alcuni thread possono vedere
+     * 'instance' come non-null pur essendo ancora parzialmente inizializzata,
+     * producendo più istanze diverse in test multithreading.
+     * Soluzione: dichiarare 'private static volatile BankConfiguration instance'.
+     */
+
+    // Campo corretto per il Double‑Checked Locking
+    private static volatile BankConfiguration instance;
+
 
     // ─── Proprietà di configurazione ────────────────────────────────────────
 
