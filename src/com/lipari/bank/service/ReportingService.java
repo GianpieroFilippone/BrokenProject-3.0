@@ -21,17 +21,26 @@ public class ReportingService {
 
     /**
      * Conta le transazioni di un dato tipo su tutti i conti forniti.
+     * Il problema nasce dall’uso di peek() che aggiunge ogni transazione
+     * alla lista di istanza debugLog. Poiché debugLog non viene mai svuotata,
+     * ogni chiamata del metodo accumula nuovamente tutte le transazioni,
+     * raddoppiando (o moltiplicando) i risultati nelle invocazioni successive.
+     * La causa è quindi il side‑effect esterno alla pipeline dello stream.
      */
+
     public long countTransactionsByType(List<Account> accounts, TransactionType type) {
+        debugLog.clear(); // fondamentale
+
         accounts.stream()
                 .flatMap(a -> a.getTransactions().stream())
                 .peek(debugLog::add)
-                .forEach(t -> { /* terminal op */ });
+                .forEach(t -> {}); // terminal op
 
         return debugLog.stream()
                 .filter(t -> t.type() == type)
                 .count();
     }
+
 
     /** Somma i saldi di tutti i conti. */
     public BigDecimal sumBalances(List<Account> accounts) {
